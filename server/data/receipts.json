@@ -1,0 +1,97 @@
+[
+  {
+    "id": "d7d5803c-4503-41ff-8857-812aa3f6d29f",
+    "merchant": "Swaraj Supermarket",
+    "date": "2026-05-14",
+    "currency": "INR",
+    "paymentMethod": "cash",
+    "lineItems": [
+      {
+        "id": "9ebf24e7-771c-4811-9b6d-28e7aad49775",
+        "name": "BAND AID",
+        "amount": 2,
+        "type": "item"
+      },
+      {
+        "id": "cc1a2e43-d212-4528-a069-238345ea0c01",
+        "name": "BAND AID",
+        "amount": 3,
+        "type": "item"
+      },
+      {
+        "id": "31ab1961-9ae9-4464-b68a-0eeaa12f0f76",
+        "name": "NIVEA SOFT",
+        "amount": 60,
+        "type": "item"
+      },
+      {
+        "id": "bbc2a3dd-f9ce-434e-82eb-cdc79d01138a",
+        "name": "ALLIN ONE",
+        "amount": 115,
+        "type": "item"
+      },
+      {
+        "id": "361627f8-b8d7-4939-baa9-936a9184240c",
+        "name": "HALDIRAMS SNACKS",
+        "amount": 52,
+        "type": "item"
+      }
+    ],
+    "total": 275,
+    "createdAt": "2026-05-17T13:10:05.252Z",
+    "updatedAt": "2026-05-17T13:10:05.252Z",
+    "originalExtracted": {
+      "merchant": "Swaraj Supermarket",
+      "date": "2026-05-14",
+      "total": 275,
+      "lineItems": [
+        {
+          "name": "BAND AID",
+          "amount": 2,
+          "type": "item",
+          "quantity": 4
+        },
+        {
+          "name": "BAND AID",
+          "amount": 3,
+          "type": "item",
+          "quantity": 4
+        },
+        {
+          "name": "NIVEA SOFT",
+          "amount": 60,
+          "type": "item",
+          "quantity": 1
+        },
+        {
+          "name": "ALLIN ONE",
+          "amount": 115,
+          "type": "item",
+          "quantity": 1
+        },
+        {
+          "name": "HALDIRAMS SNACKS",
+          "amount": 52,
+          "type": "item",
+          "quantity": 1
+        }
+      ],
+      "paymentMethod": "cash",
+      "paymentSource": null
+    },
+    "confidence": {
+      "merchant": "high",
+      "date": "high",
+      "total": "high",
+      "paymentMethod": "medium",
+      "lineItems": [
+        "high",
+        "high",
+        "high",
+        "high",
+        "high"
+      ]
+    },
+    "paymentSource": "In hand"
+  }
+]
