@@ -155,14 +155,14 @@ function App() {
   }, []);
 
   const loadReceipts = useCallback(async () => {
-    const res = await fetch('/api/receipts');
+    const res = await fetch('https://receipt-parser-app-22pt.onrender.com/api/receipts');
     const data = await res.json();
     setReceipts(data);
   }, []);
 
   const handleFile = useCallback(async (file: File) => {
     if (!file) return;
-    
+
     if (!file.type.match('image/(jpeg|png|jpg)')) {
       setError('Please upload a JPG or PNG image');
       return;
@@ -179,7 +179,7 @@ function App() {
     reader.onload = async () => {
       const image = reader.result as string;
       try {
-        const res = await fetch('/api/extract', {
+        const res = await fetch('https://receipt-parser-app-22pt.onrender.com/api/extract', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image })
@@ -205,29 +205,29 @@ function App() {
 
   useEffect(() => {
     loadReceipts();
-    
+
     const handleGlobalDragOver = (e: DragEvent) => {
       e.preventDefault();
       if (!isDragging) setIsDragging(true);
     };
-    
+
     const handleGlobalDrop = (e: DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
       const file = e.dataTransfer?.files[0];
       if (file) handleFile(file);
     };
-    
+
     const handleGlobalDragLeave = (e: DragEvent) => {
       if (e.relatedTarget === null || !document.body.contains(e.relatedTarget as Node)) {
         setIsDragging(false);
       }
     };
-    
+
     document.addEventListener('dragover', handleGlobalDragOver);
     document.addEventListener('drop', handleGlobalDrop);
     document.addEventListener('dragleave', handleGlobalDragLeave);
-    
+
     return () => {
       document.removeEventListener('dragover', handleGlobalDragOver);
       document.removeEventListener('drop', handleGlobalDrop);
@@ -245,7 +245,7 @@ function App() {
 
   const handleSave = useCallback(async (receipt: Receipt) => {
     try {
-      await fetch('/api/receipts', {
+      await fetch('https://receipt-parser-app-22pt.onrender.com/api/receipts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(receipt)
@@ -261,7 +261,7 @@ function App() {
 
   const handleUpdate = useCallback(async (receipt: Receipt) => {
     try {
-      await fetch(`/api/receipts/${receipt.id}`, {
+      await fetch(`https://receipt-parser-app-22pt.onrender.com/api/receipts/${receipt.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(receipt)
@@ -276,7 +276,7 @@ function App() {
 
   const handleDelete = useCallback(async (id: string) => {
     try {
-      await fetch(`/api/receipts/${id}`, { method: 'DELETE' });
+      await fetch(`https://receipt-parser-app-22pt.onrender.com/api/receipts/${id}`, { method: 'DELETE' });
       await loadReceipts();
     } catch (e) {
       setError('Failed to delete receipt');
@@ -303,44 +303,44 @@ function App() {
       const doc = new jsPDF();
       let symbol = currencySymbols[receipt.currency as keyof typeof currencySymbols] || '$';
       if (receipt.currency === 'INR') symbol = 'Rs.';
-      
+
       const borderColor = '#999999';
       const lightGray = '#EEEEEE';
       let y = 12;
       const x = 15;
       const pageWidth = 180;
       const rowHeight = 6;
-      
+
       doc.setTextColor(0, 0, 0);
       doc.setLineWidth(0.15);
       doc.setDrawColor(borderColor);
-      
+
       doc.setFontSize(24);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(0, 0, 0);
       doc.text('ReceiptParser', x + pageWidth / 2, y, { align: 'center' });
       y += 10;
-      
+
       const displayDate = receipt.date && receipt.date !== 'unknown' ? receipt.date : 'Date Not Detected';
       doc.setFontSize(14);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
       doc.text(displayDate, x, y);
       y += 6;
-      
+
       const displayMerchant = receipt.merchant && receipt.merchant.trim() ? receipt.merchant : 'Unknown Merchant';
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
       doc.text(displayMerchant, x, y, { maxWidth: pageWidth });
       y += 6;
-      
+
       const total = receipt.total || 0;
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
       const totalStr = total === 0 ? '0.00' : total.toFixed(2);
       doc.text(`${symbol}${totalStr}`, x, y);
       y += 5;
-      
+
       const lowConfidence = receipt.confidence && (
         receipt.confidence.total === 'low' ||
         receipt.confidence.merchant === 'low' ||
@@ -355,42 +355,42 @@ function App() {
         doc.text('NEEDS REVIEW', x + 1.5, y + 3.5);
         y += 7;
       }
-      
+
       y += 3;
       doc.setDrawColor(borderColor);
       doc.line(x, y, x + pageWidth, y);
       y += 4;
-      
+
       doc.setFontSize(8);
       doc.setTextColor(60, 60, 60);
       doc.setFont('helvetica', 'normal');
-      
+
       doc.text(`Uploaded by: User`, x, y);
       y += 4;
-      
+
       const uploadDate = receipt.createdAt ? new Date(receipt.createdAt).toLocaleDateString() : 'Not Available';
       doc.text(`Upload date: ${uploadDate}`, x, y);
       y += 4;
-      
+
       const address = receipt.merchantAddress || 'Not Available';
       doc.text(`Address: ${address}`, x, y);
       y += 4;
-      
+
       const phone = receipt.phone || 'Not Available';
       doc.text(`Phone: ${phone}`, x, y);
       y += 5;
-      
+
       doc.setDrawColor(borderColor);
       doc.line(x, y, x + pageWidth, y);
       y += 4;
-      
+
       const colNum = x + 2;
       const colItem = x + 8;
       const colQty = x + 90;
       const colUnit = x + 105;
       const colPrice = x + 130;
       const colCat = x + 155;
-      
+
       doc.setFillColor(lightGray);
       doc.rect(x, y, pageWidth, rowHeight, 'F');
       doc.setFontSize(7);
@@ -403,13 +403,13 @@ function App() {
       doc.text('Price', colPrice, y + 4);
       doc.text('Category', colCat, y + 4);
       y += rowHeight;
-      
+
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
-      
+
       const lineItems = receipt.lineItems || [];
       let subtotal = 0;
-      
+
       if (lineItems.length === 0) {
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
@@ -418,15 +418,15 @@ function App() {
       } else {
         lineItems.forEach((item, index) => {
           doc.line(x, y, x + pageWidth, y);
-          
+
           const itemName = item.name && item.name.trim() ? item.name : 'Unnamed Item';
           const qty = item.quantity || '-';
           const unitPrice = item.amount && item.quantity ? (item.amount / item.quantity).toFixed(2) : '-';
           const price = item.amount || 0;
           const category = item.type || 'Unclassified';
-          
+
           subtotal += price;
-          
+
           doc.setFontSize(7);
           doc.text((index + 1).toString(), colNum, y + 4);
           doc.text(itemName.substring(0, 30), colItem, y + 4);
@@ -435,26 +435,26 @@ function App() {
           doc.text(unitPrice !== '-' ? `${symbol}${unitPrice}` : '-', colUnit, y + 4);
           doc.text(`${symbol}${priceStr}`, colPrice, y + 4);
           doc.text(category, colCat, y + 4);
-          
+
           y += rowHeight;
         });
-        
+
         doc.line(x, y, x + pageWidth, y);
         y += 2;
       }
-      
+
       const tax = (total - subtotal) > 0 ? (total - subtotal) : 0;
-      
+
       doc.setFillColor(lightGray);
       doc.rect(x, y, pageWidth, 18, 'F');
       doc.rect(x, y, pageWidth, 18);
-      
+
       y += 5;
       doc.setFontSize(8);
       doc.setFont('helvetica', 'bold');
       doc.text('CALCULATION', x + 3, y);
       y += 5;
-      
+
       doc.setFont('helvetica', 'normal');
       const subtotalStr = subtotal === 0 ? '0.00' : subtotal.toFixed(2);
       const taxStr = tax === 0 ? '0.00' : tax.toFixed(2);
@@ -462,7 +462,7 @@ function App() {
       y += 4;
       doc.text(`Tax: ${tax > 0 ? symbol + taxStr : 'Not Detected'}`, x + 3, y);
       y += 5;
-      
+
       const totalsMatch = Math.abs(subtotal + tax - total) < 0.01;
       if (totalsMatch && total > 0) {
         doc.setTextColor(50, 150, 50);
@@ -471,28 +471,28 @@ function App() {
         doc.setTextColor(180, 100, 50);
         doc.text('Check totals', x + 140, y - 1);
       }
-      
+
       doc.setTextColor(0, 0, 0);
       y += 8;
-      
+
       doc.setDrawColor(borderColor);
       doc.line(x, y, x + pageWidth, y);
       y += 4;
-      
+
       doc.setFontSize(8);
       doc.setFont('helvetica', 'bold');
       doc.text('Payment Details', x, y);
       y += 4;
-      
+
       const paymentMethod = receipt.paymentMethod || 'Not Available';
       doc.setFont('helvetica', 'normal');
       doc.text(`Method: ${paymentMethod}`, x, y);
       y += 10;
-      
+
       doc.setFillColor(lightGray);
       doc.rect(x, y, pageWidth, 16, 'F');
       doc.rect(x, y, pageWidth, 16);
-      
+
       y += 5;
       doc.setFontSize(8);
       doc.setFont('helvetica', 'bold');
@@ -506,7 +506,7 @@ function App() {
       const totalStrFinal = total === 0 ? '0.00' : total.toFixed(2);
       doc.text('Total', x + 3, y);
       doc.text(`${symbol}${totalStrFinal}`, x + pageWidth - 3, y, { align: 'right' });
-      
+
       const filename = `${(receipt.merchant || 'receipt').replace(/\s+/g, '_')}_${(receipt.date || 'unknown').replace(/\s+/g, '_')}.pdf`;
       doc.save(filename);
     } catch (error) {
@@ -517,7 +517,7 @@ function App() {
   // JCh to RGB conversion (approximate)
   // Light Mode: primary(J75,C25,h203), secondary(J25,C25,h203), ternary(J50,C25,h203)
   // Dark Mode: primary(J25,C31,h193), ternary(J50,C35,h193), secondary(J75,C35,h193)
-  
+
   const primary = '#315B3E';
   const background = darkMode ? '#0b0f1e' : '#f8fafc';
   const text = darkMode ? '#f1f5f9' : '#1a1a2e';
@@ -558,8 +558,8 @@ function App() {
         <a href="#" className="navbar-brand">
           <div className="navbar-logo">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
-              <rect width="512" height="512" rx="120" fill="#315B3E"/>
-              <path d="M 176 112 C 176 103 183 96 192 96 L 320 96 C 328 96 336 103 336 112 L 336 416 L 296 384 L 256 416 L 216 384 L 176 416 Z" fill="#FFFFFF"/>
+              <rect width="512" height="512" rx="120" fill="#315B3E" />
+              <path d="M 176 112 C 176 103 183 96 192 96 L 320 96 C 328 96 336 103 336 112 L 336 416 L 296 384 L 256 416 L 216 384 L 176 416 Z" fill="#FFFFFF" />
               <rect x="208" y="144" width="96" height="16" rx="8" fill="#315B3E" opacity="0.8" />
               <rect x="208" y="192" width="64" height="16" rx="8" fill="#315B3E" opacity="0.8" />
               <rect x="208" y="240" width="80" height="16" rx="8" fill="#315B3E" opacity="0.8" />
@@ -579,15 +579,15 @@ function App() {
           {receipts.length > 0 && (
             <a href="#saved" className="nav-link">My Receipts</a>
           )}
-          <button 
-            className="nav-link theme-toggle" 
+          <button
+            className="nav-link theme-toggle"
             onClick={() => setDarkMode(!darkMode)}
             title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {darkMode ? (
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
             )}
           </button>
           <button onClick={() => fileInputRef.current?.click()} className="nav-link nav-link-primary" style={{ background: primary }}>Get Started</button>
@@ -608,23 +608,23 @@ function App() {
           opacity: 0.3
         }}>
           <svg width="100%" height="100%" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="600" cy="600" r="300" stroke={primary} strokeWidth="1.5" strokeDasharray="4 12" opacity="0.15"/>
-            <circle cx="600" cy="600" r="450" stroke={primary} strokeWidth="1.5" strokeDasharray="4 16" opacity="0.1"/>
-            <circle cx="600" cy="600" r="600" stroke={primary} strokeWidth="1.5" strokeDasharray="4 20" opacity="0.05"/>
+            <circle cx="600" cy="600" r="300" stroke={primary} strokeWidth="1.5" strokeDasharray="4 12" opacity="0.15" />
+            <circle cx="600" cy="600" r="450" stroke={primary} strokeWidth="1.5" strokeDasharray="4 16" opacity="0.1" />
+            <circle cx="600" cy="600" r="600" stroke={primary} strokeWidth="1.5" strokeDasharray="4 20" opacity="0.05" />
           </svg>
         </div>
-        
+
         {/* Radial glow orbs */}
         <div className="hero-glow hero-glow-1"></div>
         <div className="hero-glow hero-glow-2"></div>
         <div className="hero-glow hero-glow-3"></div>
-        
+
         {/* Floating blurred shapes */}
         <div className="hero-shape hero-shape-1"></div>
         <div className="hero-shape hero-shape-2"></div>
         <div className="hero-shape hero-shape-3"></div>
         <div className="hero-shape hero-shape-4"></div>
-        
+
         <div className="hero-content">
           <div style={{ position: 'relative', marginBottom: '28px', display: 'flex', justifyContent: 'center' }}>
             {/* Ambient glow behind workflow */}
@@ -638,8 +638,8 @@ function App() {
               background: 'radial-gradient(circle, rgba(34, 197, 94, 0.12) 0%, transparent 70%)',
               filter: 'blur(20px)',
               pointerEvents: 'none'
-            }}/>
-            
+            }} />
+
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 720 160"
@@ -650,10 +650,10 @@ function App() {
             >
               <defs>
                 <filter id="greenGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="8" result="blur"/>
+                  <feGaussianBlur stdDeviation="8" result="blur" />
                   <feMerge>
-                    <feMergeNode in="blur"/>
-                    <feMergeNode in="SourceGraphic"/>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
               </defs>
@@ -861,7 +861,7 @@ function App() {
               </g>
             </svg>
           </div>
-          
+
           {/* AI Badge */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
             <div style={{
@@ -882,14 +882,14 @@ function App() {
               boxShadow: '0 2px 12px rgba(34, 197, 94, 0.1)',
               animation: 'float-subtle 4s ease-in-out infinite'
             }}>
-              <span style={{ 
+              <span style={{
                 display: 'inline-flex',
                 animation: 'breathe-glow 2s ease-in-out infinite'
               }}>✦</span>
               AI RECEIPT PARSER
             </div>
           </div>
-          
+
           <h1 className="hero-title" style={{ color: text }}>
             Every receipt from your inbox,<br />
             <span style={{ color: primary }}>structured</span>
@@ -914,9 +914,9 @@ function App() {
               <>
                 <div className="upload-icon" style={{ background: `${primary}20`, borderRadius: '16px', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" fill="none" stroke={primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="17 8 12 3 7 8"/>
-                    <line x1="12" y1="3" x2="12" y2="15"/>
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
                   </svg>
                 </div>
                 <h3 style={{ color: text }}>Drop your receipt here</h3>
@@ -960,8 +960,8 @@ function App() {
               { number: 'AI-Powered', label: 'Smart Parsing', icon: '⚡' },
               { number: 'Freelancers', label: '& Startups', icon: '🚀' }
             ].map((stat, i) => (
-              <div key={i} className="trust-card" style={{ 
-                background: cardBg, 
+              <div key={i} className="trust-card" style={{
+                background: cardBg,
                 border: `1px solid ${border}`,
                 borderRadius: '16px',
                 padding: '28px 20px',
@@ -969,48 +969,48 @@ function App() {
                 transition: 'all 0.3s ease'
               }}>
                 <div style={{ fontSize: '32px', marginBottom: '12px' }}>{stat.icon}</div>
-                <div style={{ 
-                  fontSize: '36px', 
-                  fontWeight: '700', 
+                <div style={{
+                  fontSize: '36px',
+                  fontWeight: '700',
                   color: primary,
                   marginBottom: '8px',
                   lineHeight: 1
                 }}>{stat.number}</div>
-                <div style={{ 
-                  fontSize: '14px', 
+                <div style={{
+                  fontSize: '14px',
                   color: textMuted,
                   fontWeight: '500'
                 }}>{stat.label}</div>
               </div>
             ))}
           </div>
-          
-          <div className="trust-divider" style={{ 
-            height: '1px', 
+
+          <div className="trust-divider" style={{
+            height: '1px',
             background: `linear-gradient(90deg, transparent, ${border}, transparent)`,
             margin: '48px 0'
           }}></div>
-          
+
           <div className="trust-logos" style={{ textAlign: 'center' }}>
-            <p style={{ 
-              fontSize: '13px', 
-              color: textMuted, 
+            <p style={{
+              fontSize: '13px',
+              color: textMuted,
               marginBottom: '20px',
               textTransform: 'uppercase',
               letterSpacing: '2px'
             }}>Trusted by teams worldwide</p>
-            <div className="logo-row" style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center', 
+            <div className="logo-row" style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
               gap: '40px',
               flexWrap: 'wrap',
               opacity: 0.5
             }}>
               {['Stripe', 'QuickBooks', 'Xero', 'FreshBooks', 'Zoho'].map((logo, i) => (
-                <span key={i} style={{ 
-                  fontSize: '16px', 
-                  fontWeight: '600', 
+                <span key={i} style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
                   color: textMuted,
                   letterSpacing: '1px'
                 }}>{logo}</span>
@@ -1029,7 +1029,7 @@ function App() {
               Replace repetitive bookkeeping tasks with dependable automation
             </p>
           </div>
-          
+
           <div className="comparison-table">
             <table>
               <thead>
@@ -1076,7 +1076,7 @@ function App() {
             <span className="section-label" style={{ color: primary }}>Features</span>
             <h2 className="section-title" style={{ color: text }}>Everything you need</h2>
           </div>
-          
+
           <div className="features-grid">
             {[
               { icon: '🤖', title: 'AI Extraction', desc: 'Smart AI automatically extracts merchant, date, items, and totals from any receipt in seconds.' },
@@ -1103,7 +1103,7 @@ function App() {
             <h2 className="section-title" style={{ color: text }}>Four simple steps to autopilot</h2>
             <p className="section-subtitle" style={{ color: textMuted }}>From upload to organized data in minutes—no manual work required.</p>
           </div>
-          
+
           <div className="steps">
             {[
               { num: '1', title: 'Upload', desc: 'Drop your receipt image or take a photo with your camera. We accept all major formats.' },
@@ -1131,37 +1131,37 @@ function App() {
               Join thousands of businesses that trust ReceiptParser to handle their expense management
             </p>
           </div>
-          
+
 
           <div className="testimonial-carousel">
             <div className="testimonial-slider-container">
-<div className="testimonial-slider-track">
+              <div className="testimonial-slider-track">
                 {[...testimonials, ...testimonials, ...testimonials].map((t, i) => {
                   return (
-                    <div 
-                      key={i} 
+                    <div
+                      key={i}
                       className="testimonial-card-wrapper"
                     >
-                      <div 
+                      <div
                         className="testimonial-card"
                         style={{ background: cardBg }}
                       >
                         <span className="testimonial-quote-icon">"</span>
-                        
+
                         <div className="testimonial-stars">
                           {[...Array(5)].map((_, si) => (
                             <span key={si}>★</span>
                           ))}
                         </div>
-                        
+
                         <p className="testimonial-quote" style={{ color: text }}>"{t.quote}"</p>
-                        
+
                         <div className="testimonial-author">
                           <div className="testimonial-avatar">
                             {t.image ? (
-                              <img 
-                                src={t.image} 
-                                alt={t.name} 
+                              <img
+                                src={t.image}
+                                alt={t.name}
                                 onError={(e) => {
                                   const target = e.currentTarget;
                                   target.style.display = 'none';
@@ -1184,7 +1184,7 @@ function App() {
                               {t.verified && (
                                 <span className="verified-badge">
                                   <svg viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2" stroke="currentColor" fill="none"/>
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2" stroke="currentColor" fill="none" />
                                   </svg>
                                   Verified
                                 </span>
@@ -1216,15 +1216,15 @@ function App() {
             <h2 className="section-title" style={{ color: text }}>Frequently Asked Questions</h2>
             <p className="section-subtitle" style={{ color: textMuted }}>Everything you need to know about ReceiptParser</p>
           </div>
-          
+
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             {faqs.map((faq, i) => (
-              <div 
-                key={i} 
-                style={{ 
-                  background: cardBg, 
-                  border: `1px solid ${border}`, 
-                  borderRadius: '12px', 
+              <div
+                key={i}
+                style={{
+                  background: cardBg,
+                  border: `1px solid ${border}`,
+                  borderRadius: '12px',
                   marginBottom: '16px',
                   overflow: 'hidden'
                 }}
@@ -1244,17 +1244,17 @@ function App() {
                   }}
                 >
                   <span style={{ fontSize: '16px', fontWeight: '600', color: text }}>{faq.question}</span>
-                  <span style={{ 
-                    color: primary, 
-                    fontSize: '24px', 
+                  <span style={{
+                    color: primary,
+                    fontSize: '24px',
                     transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0deg)',
                     transition: 'transform 0.3s'
                   }}>▼</span>
                 </button>
                 {openFaq === i && (
-                  <div style={{ 
-                    padding: '0 24px 20px', 
-                    color: textMuted, 
+                  <div style={{
+                    padding: '0 24px 20px',
+                    color: textMuted,
                     lineHeight: '1.7',
                     animation: 'fadeInUp 0.3s ease-out'
                   }}>
@@ -1275,7 +1275,7 @@ function App() {
               Join thousands of businesses saving countless hours every week. Start your free trial today.
             </p>
             <div className="cta-buttons">
-              <button 
+              <button
                 className="cta-btn cta-btn-primary"
                 style={{ background: primary }}
                 onClick={() => fileInputRef.current?.click()}
@@ -1297,7 +1297,7 @@ function App() {
               <h3 style={{ color: text }}>My Saved Receipts</h3>
               <span className="count-badge" style={{ background: `${primary}20`, color: primary }}>{receipts.length} receipts</span>
             </div>
-            
+
             <div className="receipt-list">
               {receipts.map(r => (
                 <div
@@ -1323,8 +1323,8 @@ function App() {
                     </div>
                   </div>
                   <div className="receipt-card-actions">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="btn-pdf"
                       style={{
                         flex: 1,
@@ -1337,8 +1337,8 @@ function App() {
                         color: primary,
                         border: `1px solid ${primary}`,
                       }}
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
+                      onClick={(e) => {
+                        e.stopPropagation();
                         console.log('Download clicked for:', r.id);
                         try {
                           downloadPDF(r);
@@ -1350,12 +1350,12 @@ function App() {
                     >
                       Download PDF
                     </button>
-                    <button 
+                    <button
                       type="button"
-                      className="btn-delete" 
+                      className="btn-delete"
                       disabled={deletingId === r.id}
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setDeletingId(r.id);
                         handleDelete(r.id).finally(() => setDeletingId(null));
                       }}
@@ -1376,8 +1376,8 @@ function App() {
           <div className="footer-brand">
             <div className="footer-logo">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
-                <rect width="512" height="512" rx="120" fill="#315B3E"/>
-                <path d="M 176 112 C 176 103 183 96 192 96 L 320 96 C 328 96 336 103 336 112 L 336 416 L 296 384 L 256 416 L 216 384 L 176 416 Z" fill="#FFFFFF"/>
+                <rect width="512" height="512" rx="120" fill="#315B3E" />
+                <path d="M 176 112 C 176 103 183 96 192 96 L 320 96 C 328 96 336 103 336 112 L 336 416 L 296 384 L 256 416 L 216 384 L 176 416 Z" fill="#FFFFFF" />
                 <rect x="208" y="144" width="96" height="16" rx="8" fill="#315B3E" opacity="0.8" />
                 <rect x="208" y="192" width="64" height="16" rx="8" fill="#315B3E" opacity="0.8" />
                 <rect x="208" y="240" width="80" height="16" rx="8" fill="#315B3E" opacity="0.8" />
@@ -1389,7 +1389,7 @@ function App() {
             <span>ReceiptParser</span>
             <p>AI-powered receipt parsing for freelancers and businesses.</p>
           </div>
-          
+
           <div className="footer-links">
             <div className="footer-links-column">
               <h4>Product</h4>
@@ -1412,42 +1412,42 @@ function App() {
               <a href="#security">Security</a>
             </div>
           </div>
-          
+
           <div className="footer-social">
             <h4>Follow Us</h4>
             <div className="footer-social-links">
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
                 </svg>
               </a>
               <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/>
-                  <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/>
+                  <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" />
+                  <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
                 </svg>
               </a>
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
                 </svg>
               </a>
               <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
-                  <rect x="2" y="9" width="4" height="12"/>
-                  <circle cx="4" cy="4" r="2"/>
+                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                  <rect x="2" y="9" width="4" height="12" />
+                  <circle cx="4" cy="4" r="2" />
                 </svg>
               </a>
             </div>
           </div>
-          
+
           <div className="footer-support">
             <h4>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
               Need Help?
             </h4>
@@ -1455,13 +1455,13 @@ function App() {
             <button className="footer-support-btn" onClick={() => setShowSupport(true)}>
               Contact Support
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"/>
-                <polyline points="12 5 19 12 12 19"/>
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
               </svg>
             </button>
           </div>
         </div>
-        
+
         <div className="footer-bottom">
           <p className="footer-copyright">© 2026 ReceiptParser. Built by Shejal Pandey.</p>
           <div className="footer-links" style={{ gap: '24px' }}>
@@ -1474,7 +1474,7 @@ function App() {
       {showEditor && (
         <div className="editor-backdrop" onClick={() => { setShowEditor(false); setCurrentReceipt(null); setExtractedReceipt(null); }}>
           <div className="editor" onClick={(e) => e.stopPropagation()}>
-<ReceiptEditor
+            <ReceiptEditor
               receipt={currentReceipt || extractedReceipt!}
               isNew={!currentReceipt}
               onSave={currentReceipt ? handleUpdate : handleSave}
@@ -1493,8 +1493,8 @@ function App() {
                   <h2>Contact Support</h2>
                   <button className="support-close" onClick={() => { setShowSupport(false); setSupportSent(false); }}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                   </button>
                 </div>
@@ -1514,8 +1514,8 @@ function App() {
                   <button type="submit" className="support-submit">
                     Send Message
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-                      <line x1="22" y1="2" x2="11" y2="13"/>
-                      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
                     </svg>
                   </button>
                 </form>
@@ -1523,8 +1523,8 @@ function App() {
             ) : (
               <div className="support-success">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
                 <h3>Message Sent!</h3>
                 <p>We'll get back to you within 24 hours.</p>
@@ -1623,7 +1623,7 @@ function ReceiptEditor({
             <span className="confidence-badge">May be uncertain</span>
           )}
         </div>
-        
+
         <div className="field">
           <label>Date</label>
           <input
@@ -1632,7 +1632,7 @@ function ReceiptEditor({
             onChange={e => updateField('date', e.target.value)}
           />
         </div>
-        
+
         <div className="field">
           <label>Total</label>
           <input
@@ -1646,7 +1646,7 @@ function ReceiptEditor({
             <span className="original-value">AI had: {data.originalExtracted.total}</span>
           )}
         </div>
-        
+
         <div className="field">
           <label>Currency</label>
           <select
@@ -1659,7 +1659,7 @@ function ReceiptEditor({
             <option value="GBP">GBP (£)</option>
           </select>
         </div>
-        
+
         <div className="field">
           <label>Payment Method</label>
           <select
