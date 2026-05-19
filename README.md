@@ -70,16 +70,6 @@ Built with a premium minimal SaaS aesthetic inspired by Linear, Raycast, and Ver
 
 ---
 
-## Screenshots
-
-<div align="center">
-
-![Hero Section — Main landing page with upload functionality](screenshots/hero-section.png)
-
-</div>
-
----
-
 ## Quick Start
 
 ### Prerequisites
